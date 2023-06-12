@@ -1,5 +1,6 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { parseFormData } from './utils';
+import { sendContact, isContactInfo } from './notify';
 
 /**
  *
@@ -17,6 +18,11 @@ export const lambdaHandler = async (
   try {
     if (!event.body) throw new Error('Event missing a body.');
     const data = await parseFormData(event.body, event.headers);
+    if (!isContactInfo(data))
+      throw new Error(
+        'Missing required fields in form data:\n' + JSON.stringify(data),
+      );
+    const output = await sendContact(data);
     return {
       statusCode: 200,
       headers: {
@@ -25,7 +31,7 @@ export const lambdaHandler = async (
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(output),
     };
   } catch (err) {
     console.log(err);

@@ -4,6 +4,12 @@ Description: >
   contact-api
 
   Sample SAM Template for contact-api
+
+Parameters:
+  Email:
+    Type: String
+    Description: Email address to receive contact notifications.
+
   
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -16,6 +22,13 @@ Globals:
         AllowOrigin: "'*'"
 
 Resources:
+  ContactTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Ref Email
+          Protocol: email
+
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -30,6 +43,12 @@ Resources:
           Properties:
             Path: /hello
             Method: post
+      Policies:
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt ContactTopic.TopicName
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !GetAtt ContactTopic.TopicArn
 
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
