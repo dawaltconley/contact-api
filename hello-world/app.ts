@@ -22,7 +22,7 @@ export const lambdaHandler = async (
       throw new Error(
         'Missing required fields in form data:\n' + JSON.stringify(data),
       );
-    const output = await sendContact(data);
+    await sendContact(data);
     return {
       statusCode: 200,
       headers: {
@@ -31,7 +31,9 @@ export const lambdaHandler = async (
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
       },
-      body: JSON.stringify(output),
+      body: JSON.stringify({
+        message: 'Message received',
+      }),
     };
   } catch (err) {
     console.log(err);
