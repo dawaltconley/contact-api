@@ -1,5 +1,5 @@
 {
-  "body": "{\"message\": \"hello world\"}",
+  "body": "-----------------------------147122027520121970202652868316\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\nJane Doe\r\n-----------------------------147122027520121970202652868316\r\nContent-Disposition: form-data; name=\"email\"\r\n\r\njane@example.net\r\n-----------------------------147122027520121970202652868316\r\nContent-Disposition: form-data; name=\"subject\"\r\n\r\nEmail Subject\r\n-----------------------------147122027520121970202652868316\r\nContent-Disposition: form-data; name=\"message\"\r\n\r\nI would like to inquire about your services.\r\n-----------------------------147122027520121970202652868316--\r\n",
   "resource": "/{proxy+}",
   "path": "/path/to/resource",
   "httpMethod": "POST",
@@ -24,6 +24,8 @@
     "CloudFront-Is-SmartTV-Viewer": "false",
     "CloudFront-Is-Tablet-Viewer": "false",
     "CloudFront-Viewer-Country": "US",
+    "Content-Length": 591,
+    "Content-Type": "multipart/form-data; boundary=---------------------------147122027520121970202652868316",
     "Host": "1234567890.execute-api.us-east-1.amazonaws.com",
     "Upgrade-Insecure-Requests": "1",
     "User-Agent": "Custom User Agent String",
