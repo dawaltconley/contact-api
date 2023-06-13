@@ -27,7 +27,7 @@ export const sendContact = async (
 
   const metadata = Object.entries(fields)
     .sort((a, b) => (a[0] < b[0] ? -1 : 1))
-    .reduce<string[]>((msg, [k, v]) => [...msg, `${k}: ${v}`], []);
+    .reduce<string[]>((msg, [k, v]) => (v ? [...msg, `${k}: ${v}`] : msg), []);
 
   const fullMessage = metadata.join('\n') + separator + message;
 
