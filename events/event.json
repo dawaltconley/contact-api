@@ -20,7 +20,7 @@
     "CloudFront-Is-SmartTV-Viewer": "false",
     "CloudFront-Is-Tablet-Viewer": "false",
     "CloudFront-Viewer-Country": "US",
-    "Content-Length": 591,
+    "Content-Length": "591",
     "Content-Type": "multipart/form-data; boundary=---------------------------147122027520121970202652868316",
     "Host": "1234567890.execute-api.us-east-1.amazonaws.com",
     "Upgrade-Insecure-Requests": "1",
