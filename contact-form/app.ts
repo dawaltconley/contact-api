@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { parseFormData } from './utils';
+import { getFormData } from './utils';
 import { sendContact, isContactInfo, isSpam } from './notify';
 import { getResponse, HttpError } from './proxy';
 
@@ -19,42 +19,17 @@ export const lambdaHandler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   try {
-    let data: Record<string, string>;
-    if (event.httpMethod === 'GET') {
-      if (!event.queryStringParameters) {
-        throw new HttpError(400, 'Missing query string parameters');
-      }
-      data = Object.entries(event.queryStringParameters).reduce(
-        (data: Record<string, string>, [k, v]) => ({
-          ...data,
-          [k]: v ?? '',
-        }),
-        {},
-      );
-    } else if (event.httpMethod === 'POST') {
-      if (!event.body) {
-        throw new HttpError(400, 'Missing body');
-      }
-      data = await parseFormData(event.body, event.headers).catch((e) => {
-        throw new HttpError(400, e.message);
-      });
-    } else {
-      throw new HttpError(400, 'Bad request');
-    }
-
+    const data = await getFormData(event);
     if (!isContactInfo(data))
       throw new HttpError(400, {
         message: 'Missing required fields in form data',
         received: data,
       });
-
     if (isSpam(data)) {
       console.error('Detected spam', data);
       return success; // abort silently
     }
-
     await sendContact(data);
-
     return success;
   } catch (err) {
     console.error(err);
