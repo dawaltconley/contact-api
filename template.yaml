@@ -1,33 +1,96 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  contact-api
-
-  Sample SAM Template for contact-api
+  SAM template for handling contact form submissions.
 
 Parameters:
   Email:
     Type: String
     Description: Email address to receive contact notifications.
-
+  ApiDomain:
+    Type: String
+    Description: Base domain where the api is hosted. Used to create an API Gateway custom domain name for this deployment.
+    Default: ''
+  ApiSubdomain:
+    Type: String
+    Description: Subdomain where the api is hosted. Used to create an API Gateway custom domain name for this deployment.
+    Default: api
+  ApiBasePath:
+    Type: String
+    Description: Base path of the custom domain where the API will be hosted.
+    Default: ''
+  CertificateArn:
+    Type: String
+    Description: Certificate Manager ARN for the ApiDomain certificate. Required to use a custom domain.
+    Default: ''
+  Route53Dns:
+    Type: String
+    Description: Whether this domain uses Route53 for its DNS
+    Default: 'true'
+    AllowedValues: ['true', 'false']
+  AllowOrigin:
+    Type: String
+    Description: Passed directly to Access-Control-Allow-Origin header in the CORS configuration.
+    Default: ''
   
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     Timeout: 3
-  Api:
-    Cors:
-        AllowMethods: "'GET,POST,OPTIONS'"
-        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-        AllowOrigin: "'*'"
+
+Conditions:
+  HasApiSubdomain: !Not [!Equals [!Ref ApiSubdomain, '']]
+  HasApiBasePath: !Not [!Equals [!Ref ApiBasePath, '']]
+  HasCustomApiDomain: !And
+    - !Not [!Equals [!Ref ApiDomain, '']]
+    - !Not [!Equals [!Ref CertificateArn, '']]
+  CorsEnabled: !Not [!Equals [!Ref AllowOrigin, '']]
+  CreateRecordSetGroup: !And
+    - !Condition HasCustomApiDomain
+    - !Equals [!Ref Route53Dns, 'true']
 
 Resources:
-  ContactTopic:
-    Type: AWS::SNS::Topic
+
+  CustomDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Condition: HasCustomApiDomain
     Properties:
-      Subscription:
-        - Endpoint: !Ref Email
-          Protocol: email
+      DomainName: !If [HasApiSubdomain, !Sub '${ApiSubdomain}.${ApiDomain}', !Ref ApiDomain]
+      DomainNameConfigurations:
+        - CertificateArn: !Ref CertificateArn
+          SecurityPolicy: TLS_1_2
+
+  CustomDomainMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Condition: HasCustomApiDomain
+    Properties:
+      DomainName: !Ref CustomDomain
+      ApiId: !Ref ContactApi
+      Stage: Prod
+      ApiMappingKey: !If [HasApiBasePath, !Ref ApiBasePath, !Ref AWS::NoValue]
+      
+  RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Condition: CreateRecordSetGroup
+    Properties:
+      HostedZoneName: !Sub '${ApiDomain}.'
+      RecordSets:
+        - Name: !Ref CustomDomain
+          Type: A
+          AliasTarget:
+            HostedZoneId: !GetAtt CustomDomain.RegionalHostedZoneId
+            DNSName: !GetAtt CustomDomain.RegionalDomainName
+
+  ContactApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors: !If
+        - CorsEnabled
+        - AllowMethods: "'GET,POST,OPTIONS'"
+          AllowHeaders: "'Content-Type'"
+          AllowOrigin: !Sub "'${AllowOrigin}'"
+        - !Ref AWS::NoValue
 
   ContactFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -43,13 +106,13 @@ Resources:
           Properties:
             Path: /contact
             Method: post
+            RestApiId: !Ref ContactApi
       Policies:
         - SNSPublishMessagePolicy:
             TopicName: !GetAtt ContactTopic.TopicName
       Environment:
         Variables:
           SNS_TOPIC_ARN: !GetAtt ContactTopic.TopicArn
-
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -57,18 +120,19 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints: 
-        - app.ts
+          - app.ts
+
+  ContactTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Ref Email
+          Protocol: email
 
 Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   ContactApi:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  # ContactFunction:
-  #   Description: "Contact Api Lambda Function ARN"
-  #   Value: !GetAtt ContactFunction.Arn
-  ContactFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt ContactFunctionRole.Arn
+    Description: "API Gateway endpoint URL"
+    Value: !If
+      - HasCustomApiDomain
+      - !Sub "https://${CustomDomain}/${ApiBasePath}"
+      - !Sub "https://${ContactApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/contact/"
