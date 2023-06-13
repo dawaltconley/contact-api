@@ -1,10 +1,14 @@
-import type { APIGatewayProxyEvent } from 'aws-lambda';
+import type {
+  APIGatewayProxyEvent,
+  APIGatewayProxyEventHeaders,
+  APIGatewayProxyEventQueryStringParameters,
+} from 'aws-lambda';
 import busboy from 'busboy';
 import { HttpError } from './proxy';
 
-export const parseFormData = (
+export const parseFormBody = (
   body: string,
-  headers: APIGatewayProxyEvent['headers'],
+  headers: APIGatewayProxyEventHeaders,
 ): Promise<Record<string, string>> =>
   new Promise((resolve, reject) => {
     const parsed: Record<string, string> = {};
@@ -27,6 +31,17 @@ export const parseFormData = (
     bb.end(body);
   });
 
+export const parseQueryString = (
+  qs: APIGatewayProxyEventQueryStringParameters,
+): Record<string, string> =>
+  Object.entries(qs).reduce(
+    (data: Record<string, string>, [k, v]) => ({
+      ...data,
+      [k]: v ?? '',
+    }),
+    {},
+  );
+
 export const getFormData = async (
   event: APIGatewayProxyEvent,
 ): Promise<Record<string, string>> => {
@@ -34,20 +49,16 @@ export const getFormData = async (
     if (!event.queryStringParameters) {
       throw new HttpError(400, 'Missing query string parameters');
     }
-    return Object.entries(event.queryStringParameters).reduce(
-      (data: Record<string, string>, [k, v]) => ({
-        ...data,
-        [k]: v ?? '',
-      }),
-      {},
-    );
+    return parseQueryString(event.queryStringParameters);
   }
 
   if (event.httpMethod === 'POST') {
     if (!event.body) {
-      throw new HttpError(400, 'Missing body');
+      if (!event.queryStringParameters)
+        throw new HttpError(400, 'Missing form data');
+      return parseQueryString(event.queryStringParameters);
     }
-    return parseFormData(event.body, event.headers).catch((e) => {
+    return parseFormBody(event.body, event.headers).catch((e) => {
       throw new HttpError(400, e.message);
     });
   }
