@@ -1,4 +1,5 @@
-import { APIGatewayProxyEvent } from 'aws-lambda';
+import type { APIGatewayProxyEvent } from 'aws-lambda';
+import merge from 'lodash/merge';
 
 const event: APIGatewayProxyEvent = {
   body: null,
@@ -71,5 +72,34 @@ const event: APIGatewayProxyEvent = {
     stage: 'dev',
   },
 };
+
+export const formData = {
+  name: 'Jane Doe',
+  email: 'jane@example.net',
+  subject: 'Email Subject',
+  message: 'I would like to inquire about your services.',
+};
+
+export const multipart = merge({}, event, {
+  body: '-----------------------------147122027520121970202652868316\r\nContent-Disposition: form-data; name="name"\r\n\r\nJane Doe\r\n-----------------------------147122027520121970202652868316\r\nContent-Disposition: form-data; name="email"\r\n\r\njane@example.net\r\n-----------------------------147122027520121970202652868316\r\nContent-Disposition: form-data; name="subject"\r\n\r\nEmail Subject\r\n-----------------------------147122027520121970202652868316\r\nContent-Disposition: form-data; name="message"\r\n\r\nI would like to inquire about your services.\r\n-----------------------------147122027520121970202652868316--\r\n',
+  httpMethod: 'POST',
+  headers: {
+    'Content-Type':
+      'multipart/form-data; boundary=---------------------------147122027520121970202652868316',
+  },
+});
+
+export const urlencoded = merge({}, event, {
+  body: 'name=Jane+Doe&email=jane%40example.net&subject=Email+Subject&message=I+would+like+to+inquire+about+your+services.',
+  httpMethod: 'POST',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  },
+});
+
+export const queryString = merge({}, event, {
+  httpMethod: 'GET',
+  queryStringParameters: { ...formData },
+});
 
 export default event;
