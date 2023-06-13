@@ -1,4 +1,5 @@
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
+import { HttpError } from './proxy';
 
 const client = new SNSClient({});
 
@@ -18,6 +19,22 @@ export const isSpam = (
   honeypots = process.env.HONEYPOT_FIELDS?.split(','),
 ): boolean =>
   !!honeypots && honeypots.some((field) => field in info && info[field]);
+
+export const validateFormData = (
+  obj: Record<string, string | undefined>,
+): ContactInfo => {
+  // filter out any undefined or empty values
+  const data = Object.entries(obj).reduce<Record<string, string>>(
+    (data, [k, v]) => (v ? { ...data, [k]: v } : data),
+    {},
+  );
+  if (!isContactInfo(data))
+    throw new HttpError(400, {
+      message: 'Missing required fields in form data',
+      received: data,
+    });
+  return data;
+};
 
 export const sendContact = async (
   { subject, message, ...fields }: ContactInfo,

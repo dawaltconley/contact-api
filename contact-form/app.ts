@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { getFormData } from './utils';
-import { sendContact, isContactInfo, isSpam } from './notify';
+import { sendContact, validateFormData, isSpam } from './notify';
 import { getResponse, HttpError } from './proxy';
 
 const success = getResponse(200, 'Message received');
@@ -19,12 +19,7 @@ export const lambdaHandler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   try {
-    const data = await getFormData(event);
-    if (!isContactInfo(data))
-      throw new HttpError(400, {
-        message: 'Missing required fields in form data',
-        received: data,
-      });
+    const data = await getFormData(event).then(validateFormData);
     if (isSpam(data)) {
       console.error('Detected spam', data);
       return success; // abort silently

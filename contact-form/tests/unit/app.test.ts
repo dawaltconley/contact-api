@@ -142,6 +142,25 @@ describe('Fail conditions', () => {
     expect(consoleError).toHaveBeenCalled();
   });
 
+  it('Errors on empty fields', async () => {
+    const event = merge({}, urlencodedEvent, {
+      body: new URLSearchParams({
+        name: 'Jane Doe',
+        email: 'jane@example.com',
+        subject: 'Empty message',
+        message: '',
+      }).toString(),
+    });
+    const result: APIGatewayProxyResult = await lambdaHandler(event);
+
+    expect(result.statusCode).toEqual(400);
+    expect(JSON.parse(result.body).message).toEqual(
+      'Missing required fields in form data',
+    );
+    expect(snsMock).not.toHaveReceivedCommand(PublishCommand);
+    expect(consoleError).toHaveBeenCalled();
+  });
+
   it('Silently fails on spam.', async () => {
     const event = merge({}, urlencodedEvent);
     const qs = new URLSearchParams(event.body);
