@@ -7,6 +7,10 @@ Parameters:
   Email:
     Type: String
     Description: Email address to receive contact notifications.
+  Honeypot:
+    Type: CommaDelimitedList
+    Description: List of honeypot form field names. These will cause the function to quietly abort.
+    Default: ''
   ApiDomain:
     Type: String
     Description: Base domain where the api is hosted. Used to create an API Gateway custom domain name for this deployment.
@@ -113,6 +117,8 @@ Resources:
       Environment:
         Variables:
           SNS_TOPIC_ARN: !GetAtt ContactTopic.TopicArn
+          HONEYPOT_FIELDS: !Ref Honeypot
+          ALLOW_ORIGIN: !Ref AllowOrigin
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:

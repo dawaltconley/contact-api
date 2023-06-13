@@ -1,6 +1,6 @@
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 
-const { SNS_TOPIC_ARN } = process.env;
+const { SNS_TOPIC_ARN, HONEYPOT_FIELDS } = process.env;
 
 const client = new SNSClient({});
 
@@ -14,6 +14,10 @@ export interface ContactInfo {
 export const isContactInfo = (
   obj: Record<string, string>,
 ): obj is ContactInfo => 'subject' in obj && 'message' in obj && 'email' in obj;
+
+export const isSpam = (info: ContactInfo): boolean =>
+  !!HONEYPOT_FIELDS &&
+  HONEYPOT_FIELDS.split(',').some((field) => field in info && info[field]);
 
 export const sendContact = async (
   { subject, message, ...fields }: ContactInfo,
