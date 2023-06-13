@@ -1,0 +1,32 @@
+{
+  "name": "@dawaltconley/contact-api",
+  "version": "0.1.0",
+  "description": "A serverless application for handling contact form requests.",
+  "main": "app.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "npm run test --workspaces",
+    "build": "sam build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dawaltconley/contact-api.git"
+  },
+  "keywords": [
+    "aws",
+    "sam",
+    "contact",
+    "form",
+    "lambda",
+    "api"
+  ],
+  "author": "Dylan Awalt-Conley",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dawaltconley/contact-api/issues"
+  },
+  "homepage": "https://github.com/dawaltconley/contact-api#readme",
+  "workspaces": [
+    "contact-form"
+  ]
+}

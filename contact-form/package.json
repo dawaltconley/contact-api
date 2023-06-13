@@ -7,7 +7,7 @@
     "unit": "jest",
     "lint": "eslint '*.ts' --quiet --fix",
     "compile": "tsc",
-    "test": "npm run compile && npm run unit"
+    "test": "npm run lint && npm run compile && npm run unit"
   },
   "dependencies": {
     "@aws-sdk/client-sns": "^3.350.0",
@@ -43,5 +43,8 @@
   "bugs": {
     "url": "https://github.com/dawaltconley/contact-api/issues"
   },
-  "homepage": "https://github.com/dawaltconley/contact-api#readme"
+  "homepage": "https://github.com/dawaltconley/contact-api#readme",
+  "directories": {
+    "test": "tests"
+  }
 }
