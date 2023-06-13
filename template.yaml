@@ -117,7 +117,7 @@ Resources:
       Environment:
         Variables:
           SNS_TOPIC_ARN: !GetAtt ContactTopic.TopicArn
-          HONEYPOT_FIELDS: !Ref Honeypot
+          HONEYPOT_FIELDS: !Join [',', !Ref Honeypot]
           ALLOW_ORIGIN: !Ref AllowOrigin
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
