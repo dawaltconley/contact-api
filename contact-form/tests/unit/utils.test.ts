@@ -1,6 +1,6 @@
 import merge from 'lodash/merge';
 import { parseFormBody, parseQueryString, getFormData } from '../../utils';
-import baseEvent from '../proxy-event';
+import baseEvent from '../test-events';
 
 const result = {
   name: 'Jane Doe',

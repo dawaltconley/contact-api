@@ -2,7 +2,7 @@ import { APIGatewayProxyResult } from 'aws-lambda';
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 import { mockClient } from 'aws-sdk-client-mock';
 import 'aws-sdk-client-mock-jest';
-import baseEvent from '../proxy-event';
+import baseEvent from '../test-events';
 import { lambdaHandler } from '../../app';
 
 process.env.SNS_TOPIC_ARN = 'mock';
