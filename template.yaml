@@ -36,7 +36,7 @@ Parameters:
     Type: String
     Description: Passed directly to Access-Control-Allow-Origin header in the CORS configuration.
     Default: ''
-  
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
@@ -54,12 +54,15 @@ Conditions:
     - !Equals [!Ref Route53Dns, 'true']
 
 Resources:
-
   CustomDomain:
     Type: AWS::ApiGatewayV2::DomainName
     Condition: HasCustomApiDomain
     Properties:
-      DomainName: !If [HasApiSubdomain, !Sub '${ApiSubdomain}.${ApiDomain}', !Ref ApiDomain]
+      DomainName: !If
+        - HasApiSubdomain
+        - !Sub '${ApiSubdomain}.${ApiDomain}'
+        - !Ref ApiDomain
+
       DomainNameConfigurations:
         - CertificateArn: !Ref CertificateArn
           SecurityPolicy: TLS_1_2
@@ -72,7 +75,7 @@ Resources:
       ApiId: !Ref ContactApi
       Stage: Prod
       ApiMappingKey: !If [HasApiBasePath, !Ref ApiBasePath, !Ref AWS::NoValue]
-      
+
   RecordSetGroup:
     Type: AWS::Route53::RecordSetGroup
     Condition: CreateRecordSetGroup
@@ -115,7 +118,7 @@ Resources:
         - SNSPublishMessagePolicy:
             TopicName: !GetAtt ContactTopic.TopicName
       Environment:
-        Variables:
+        Variables: # should probably be stage variables
           SNS_TOPIC_ARN: !GetAtt ContactTopic.TopicArn
           HONEYPOT_FIELDS: !Join [',', !Ref Honeypot]
           ALLOW_ORIGIN: !Ref AllowOrigin
@@ -123,9 +126,9 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: 'es2020'
         Sourcemap: true
-        EntryPoints: 
+        EntryPoints:
           - app.ts
 
   ContactTopic:
@@ -137,8 +140,8 @@ Resources:
 
 Outputs:
   ContactApi:
-    Description: "API Gateway endpoint URL"
+    Description: 'API Gateway endpoint URL'
     Value: !If
       - HasCustomApiDomain
-      - !Sub "https://${CustomDomain}/${ApiBasePath}"
-      - !Sub "https://${ContactApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/contact/"
+      - !Sub 'https://${CustomDomain}/${ApiBasePath}'
+      - !Sub 'https://${ContactApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/contact/'
