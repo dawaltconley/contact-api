@@ -5,6 +5,8 @@ import 'aws-sdk-client-mock-jest';
 import baseEvent from '../proxy-event';
 import { lambdaHandler } from '../../app';
 
+process.env.SNS_TOPIC_ARN = 'mock';
+
 const snsMock = mockClient(SNSClient);
 
 describe('Form submission', function () {

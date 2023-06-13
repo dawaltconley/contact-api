@@ -1,7 +1,5 @@
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 
-const { SNS_TOPIC_ARN, HONEYPOT_FIELDS } = process.env;
-
 const client = new SNSClient({});
 
 export interface ContactInfo {
@@ -15,14 +13,18 @@ export const isContactInfo = (
   obj: Record<string, string>,
 ): obj is ContactInfo => 'subject' in obj && 'message' in obj && 'email' in obj;
 
-export const isSpam = (info: ContactInfo): boolean =>
-  !!HONEYPOT_FIELDS &&
-  HONEYPOT_FIELDS.split(',').some((field) => field in info && info[field]);
+export const isSpam = (
+  info: ContactInfo,
+  honeypots = process.env.HONEYPOT_FIELDS?.split(','),
+): boolean =>
+  !!honeypots && honeypots.some((field) => field in info && info[field]);
 
 export const sendContact = async (
   { subject, message, ...fields }: ContactInfo,
-  separator = '\n\n',
+  { separator = '\n\n', topicArn = process.env.SNS_TOPIC_ARN } = {},
 ) => {
+  if (!topicArn) throw new Error('No topic provided.');
+
   const metadata = Object.entries(fields)
     .sort((a, b) => (a[0] < b[0] ? -1 : 1))
     .reduce<string[]>((msg, [k, v]) => [...msg, `${k}: ${v}`], []);
@@ -30,7 +32,7 @@ export const sendContact = async (
   const fullMessage = metadata.join('\n') + separator + message;
 
   const command = new PublishCommand({
-    TopicArn: SNS_TOPIC_ARN,
+    TopicArn: topicArn,
     Subject: subject,
     Message: fullMessage,
   });

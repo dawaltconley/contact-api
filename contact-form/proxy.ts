@@ -2,29 +2,35 @@ import type { APIGatewayProxyResult } from 'aws-lambda';
 
 type ProxyHeaders = APIGatewayProxyResult['headers'];
 
-const { ALLOW_ORIGIN } = process.env;
-const cors: ProxyHeaders = ALLOW_ORIGIN
-  ? {
-      'Access-Control-Allow-Origin': ALLOW_ORIGIN,
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    }
-  : {};
+const getHeaders = (
+  headers: ProxyHeaders,
+  corsOrigin = process.env.ALLOW_ORIGIN,
+): ProxyHeaders =>
+  corsOrigin
+    ? {
+        'Access-Control-Allow-Origin': corsOrigin,
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+        ...headers,
+      }
+    : headers;
+
+const getBody = (message: string | ResponseBody): ResponseBody =>
+  typeof message === 'string'
+    ? {
+        message,
+      }
+    : message;
 
 export const getResponse = (
   statusCode: number,
   message: string | ResponseBody,
   headers?: ProxyHeaders,
+  allowOrigin = process.env.ALLOW_ORIGIN,
 ): APIGatewayProxyResult => ({
   statusCode,
-  headers: { ...cors, ...headers },
-  body: JSON.stringify(
-    typeof message === 'string'
-      ? {
-          message,
-        }
-      : message,
-  ),
+  headers: getHeaders(headers, allowOrigin),
+  body: JSON.stringify(getBody(message)),
 });
 
 type JSONCompatible = string | number | boolean | null;
@@ -41,7 +47,7 @@ export class HttpError extends Error {
   status: number;
   body: ResponseBody;
   constructor(statusCode: number, message: string | ResponseBody) {
-    const body = typeof message === 'string' ? { message } : message;
+    const body = getBody(message);
     super(body.message);
     this.status = statusCode;
     this.body = body;
