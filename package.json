@@ -3,10 +3,15 @@
   "version": "0.1.0",
   "description": "A serverless application for handling contact form requests.",
   "main": "app.js",
+  "files": [
+    "dist/**/*"
+  ],
   "devDependencies": {},
   "scripts": {
-    "test": "npm run test --workspaces",
-    "build": "sam build"
+    "test": "sam validate && npm run test --workspaces",
+    "build": "sam build -b dist/build",
+    "deploy": "sam deploy --template-file dist/build/template.yaml",
+    "prepublishOnly": "npm test && npm run build"
   },
   "repository": {
     "type": "git",
