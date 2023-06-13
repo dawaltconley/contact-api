@@ -29,19 +29,19 @@ Resources:
         - Endpoint: !Ref Email
           Protocol: email
 
-  HelloWorldFunction:
+  ContactFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: hello-world/
+      CodeUri: contact-form/
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
         - x86_64
       Events:
-        HelloWorld:
+        FormSubmit:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            Path: /hello
+            Path: /contact
             Method: post
       Policies:
         - SNSPublishMessagePolicy:
@@ -63,12 +63,12 @@ Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldApi:
+  ContactApi:
     Description: "API Gateway endpoint URL for Prod stage for Hello World function"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  HelloWorldFunction:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
+  # ContactFunction:
+  #   Description: "Contact Api Lambda Function ARN"
+  #   Value: !GetAtt ContactFunction.Arn
+  ContactFunctionIamRole:
     Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt HelloWorldFunctionRole.Arn
+    Value: !GetAtt ContactFunctionRole.Arn

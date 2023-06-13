@@ -1,18 +1,14 @@
 {
   "body": "-----------------------------147122027520121970202652868316\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\nJane Doe\r\n-----------------------------147122027520121970202652868316\r\nContent-Disposition: form-data; name=\"email\"\r\n\r\njane@example.net\r\n-----------------------------147122027520121970202652868316\r\nContent-Disposition: form-data; name=\"subject\"\r\n\r\nEmail Subject\r\n-----------------------------147122027520121970202652868316\r\nContent-Disposition: form-data; name=\"message\"\r\n\r\nI would like to inquire about your services.\r\n-----------------------------147122027520121970202652868316--\r\n",
   "resource": "/{proxy+}",
-  "path": "/path/to/resource",
+  "path": "/contact",
   "httpMethod": "POST",
   "isBase64Encoded": false,
-  "queryStringParameters": {
-    "foo": "bar"
-  },
+  "queryStringParameters": null,
   "pathParameters": {
-    "proxy": "/path/to/resource"
+    "proxy": "/contact"
   },
-  "stageVariables": {
-    "baz": "qux"
-  },
+  "stageVariables": null,
   "headers": {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "Accept-Encoding": "gzip, deflate, sdch",
@@ -55,7 +51,7 @@
       "userAgent": "Custom User Agent String",
       "user": null
     },
-    "path": "/prod/path/to/resource",
+    "path": "/contact",
     "resourcePath": "/{proxy+}",
     "httpMethod": "POST",
     "apiId": "1234567890",

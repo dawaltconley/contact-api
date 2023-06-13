@@ -1,11 +1,8 @@
 {
-  "name": "hello_world",
+  "name": "contact-api",
   "version": "1.0.0",
-  "description": "hello world sample for NodeJS",
+  "description": "Lambda for handling contact form requests.",
   "main": "app.js",
-  "repository": "https://github.com/awslabs/aws-sam-cli/tree/develop/samcli/local/init/templates/cookiecutter-aws-sam-hello-nodejs",
-  "author": "SAM CLI",
-  "license": "MIT",
   "scripts": {
     "unit": "jest",
     "lint": "eslint '*.ts' --quiet --fix",
@@ -32,5 +29,15 @@
     "ts-jest": "^29.0.5",
     "ts-node": "^10.9.1",
     "typescript": "^4.8.4"
-  }
+  },
+  "author": "Dylan Awalt-Conley",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dawaltconley/contact-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dawaltconley/contact-api/issues"
+  },
+  "homepage": "https://github.com/dawaltconley/contact-api#readme"
 }
