@@ -40,7 +40,9 @@ Resources:
 #...
 ```
 
-You can then package and deploy like you would with any nested template.
+You can then package and deploy like you would with any nested template. 
+This requires the `CAPABILITY_IAM` and `CAPABILITY_AUTO_EXPAND` 
+capabilities.
 
 ```bash
 aws cloudformation package \
@@ -50,7 +52,7 @@ aws cloudformation package \
 aws cloudformation deploy \
   --template-file $OUTPUT \
   --stack-name $STACK_NAME \
-  --capabilities CAPABILITY_IAM
+  --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND
 ```
 
 ### As a standalone project

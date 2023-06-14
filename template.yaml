@@ -143,5 +143,5 @@ Outputs:
     Description: 'API Gateway endpoint URL'
     Value: !If
       - HasCustomApiDomain
-      - !Sub 'https://${CustomDomain}/${ApiBasePath}'
+      - !Sub 'https://${CustomDomain}/contact/'
       - !Sub 'https://${ContactApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/contact/'
