@@ -11,6 +11,7 @@
     "test": "sam validate && npm run test --workspaces",
     "build": "sam build -b dist/build",
     "deploy": "sam deploy --template-file dist/build/template.yaml",
+    "update-docs": "deno run --allow-read --allow-write update-docs.js template.yaml docs/template.md",
     "prepublishOnly": "npm test && npm run build"
   },
   "repository": {
