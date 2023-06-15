@@ -150,7 +150,13 @@ Resources:
 Outputs:
   ContactApi:
     Description: 'API Gateway endpoint URL'
-    Value: !If
-      - HasCustomApiDomain
-      - !Sub 'https://${CustomDomain}/${ApiBasePath}'
-      - !Sub 'https://${ContactApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/contact/'
+    Value: !Sub 'https://${ContactApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/contact/'
+  CustomDomainApi:
+    Condition: HasCustomApiDomain
+    Description: 'Custom domain API endpoint'
+    Value: !Sub
+      - 'https://${CustomDomain}${BasePath}/contact/'
+      - BasePath: !If
+          - HasApiBasePath
+          - !Sub '/${ApiBasePath}'
+          - ''
