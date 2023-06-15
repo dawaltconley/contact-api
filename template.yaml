@@ -37,11 +37,6 @@ Parameters:
     Description: Passed directly to Access-Control-Allow-Origin header in the CORS configuration.
     Default: ''
 
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
-Globals:
-  Function:
-    Timeout: 3
-
 Conditions:
   HasApiSubdomain: !Not [!Equals [!Ref ApiSubdomain, '']]
   HasApiBasePath: !Not [!Equals [!Ref ApiBasePath, '']]
@@ -107,6 +102,7 @@ Resources:
       Runtime: nodejs18.x
       Architectures:
         - x86_64
+      Timeout: 10
       Events:
         GetRequests:
           Type: Api
