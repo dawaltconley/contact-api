@@ -100,7 +100,7 @@ Resources:
         - !Ref AWS::NoValue
 
   ContactFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Properties:
       CodeUri: contact-form/
       Handler: app.lambdaHandler
@@ -108,8 +108,14 @@ Resources:
       Architectures:
         - x86_64
       Events:
-        FormSubmit:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+        GetRequests:
+          Type: Api
+          Properties:
+            Path: /contact
+            Method: get
+            RestApiId: !Ref ContactApi
+        PostRequests:
+          Type: Api
           Properties:
             Path: /contact
             Method: post
