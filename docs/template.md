@@ -13,6 +13,13 @@ Email address to receive contact notifications.
 
 ## Optional Parameters
 
+### Required
+
+List of form field names to require in addition to 'subject' and 'message', which are always required. The function will return a 400 error if any of these are missing.
+
+- Type: CommaDelimitedList
+- Default: email
+
 ### Honeypot
 
 List of honeypot form field names. These will cause the function to quietly abort.

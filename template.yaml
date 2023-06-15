@@ -7,6 +7,12 @@ Parameters:
   Email:
     Type: String
     Description: Email address to receive contact notifications.
+  Required:
+    Type: CommaDelimitedList
+    Description: >-
+      List of form field names to require in addition to 'subject' and 'message', which are always required.
+      The function will return a 400 error if any of these are missing.
+    Default: 'email'
   Honeypot:
     Type: CommaDelimitedList
     Description: List of honeypot form field names. These will cause the function to quietly abort.
@@ -122,6 +128,7 @@ Resources:
       Environment:
         Variables: # should probably be stage variables
           SNS_TOPIC_ARN: !GetAtt ContactTopic.TopicArn
+          REQUIRED_FIELDS: !Join [',', !Ref Required]
           HONEYPOT_FIELDS: !Join [',', !Ref Honeypot]
           ALLOW_ORIGIN: !Ref AllowOrigin
     Metadata: # Manage esbuild properties

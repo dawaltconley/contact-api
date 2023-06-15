@@ -3,7 +3,7 @@ import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 import merge from 'lodash/merge';
 import { mockClient } from 'aws-sdk-client-mock';
 import 'aws-sdk-client-mock-jest';
-import {
+import baseEvent, {
   multipart as multipartEvent,
   urlencoded as urlencodedEvent,
   queryString as queryStringEvent,
@@ -19,6 +19,7 @@ const consoleError = jest.spyOn(global.console, 'error').mockImplementation();
 beforeEach(() => {
   snsMock.reset();
   consoleError.mockClear();
+  delete process.env.REQUIRED_FIELDS;
 });
 
 describe('Successful form submission', function () {
@@ -89,6 +90,27 @@ describe('Successful form submission', function () {
         'email: jane@example.net\nname: Jane Doe\n\nI would like to inquire about your services.',
     });
   });
+
+  it('Succeeds with minimum required fields', async () => {
+    const event = merge({}, baseEvent, {
+      queryStringParameters: {
+        subject: 'Subj',
+        message: 'Something',
+      },
+    });
+    const result: APIGatewayProxyResult = await lambdaHandler(event);
+
+    expect(result.statusCode).toEqual(200);
+    expect(result.body).toEqual(
+      JSON.stringify({
+        message: 'Message received',
+      }),
+    );
+    expect(snsMock).toHaveReceivedCommandWith(PublishCommand, {
+      Subject: 'Subj',
+      Message: 'Something',
+    });
+  });
 });
 
 describe('Fail conditions', () => {
@@ -125,7 +147,7 @@ describe('Fail conditions', () => {
     expect(consoleError).toHaveBeenCalled();
   });
 
-  it('Errors on missing fields', async () => {
+  it('Errors on missing message', async () => {
     const event = merge({}, urlencodedEvent, {
       body: new URLSearchParams({
         name: 'Jane Doe',
@@ -149,6 +171,25 @@ describe('Fail conditions', () => {
         email: 'jane@example.com',
         subject: 'Empty message',
         message: '',
+      }).toString(),
+    });
+    const result: APIGatewayProxyResult = await lambdaHandler(event);
+
+    expect(result.statusCode).toEqual(400);
+    expect(JSON.parse(result.body).message).toEqual(
+      'Missing required fields in form data',
+    );
+    expect(snsMock).not.toHaveReceivedCommand(PublishCommand);
+    expect(consoleError).toHaveBeenCalled();
+  });
+
+  it('Errors on missing required fields', async () => {
+    process.env.REQUIRED_FIELDS = 'name,email';
+    const event = merge({}, urlencodedEvent, {
+      body: new URLSearchParams({
+        name: 'Jane Doe',
+        subject: 'Missing email',
+        message: 'Should error',
       }).toString(),
     });
     const result: APIGatewayProxyResult = await lambdaHandler(event);

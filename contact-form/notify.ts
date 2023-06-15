@@ -3,8 +3,10 @@ import { HttpError } from './proxy';
 
 const client = new SNSClient({});
 
+const hasAllProps = (obj: object, properties: string[]): boolean =>
+  properties.every((p) => p in obj);
+
 export interface ContactInfo {
-  email: string;
   subject: string;
   message: string;
   [field: string]: string;
@@ -12,7 +14,7 @@ export interface ContactInfo {
 
 export const isContactInfo = (
   obj: Record<string, string>,
-): obj is ContactInfo => 'subject' in obj && 'message' in obj && 'email' in obj;
+): obj is ContactInfo => hasAllProps(obj, ['subject', 'message']);
 
 export const isSpam = (
   info: ContactInfo,
@@ -22,15 +24,17 @@ export const isSpam = (
 
 export const validateFormData = (
   obj: Record<string, string | undefined>,
+  required = process.env.REQUIRED_FIELDS?.split(',') ?? [],
 ): ContactInfo => {
   // filter out any undefined or empty values
   const data = Object.entries(obj).reduce<Record<string, string>>(
     (data, [k, v]) => (v ? { ...data, [k]: v } : data),
     {},
   );
-  if (!isContactInfo(data))
+  if (!isContactInfo(data) || !hasAllProps(data, required))
     throw new HttpError(400, {
       message: 'Missing required fields in form data',
+      required: ['subject', 'message', ...required],
       received: data,
     });
   return data;
@@ -44,9 +48,10 @@ export const sendContact = async (
 
   const metadata = Object.entries(fields)
     .sort((a, b) => (a[0] < b[0] ? -1 : 1))
-    .reduce<string[]>((msg, [k, v]) => (v ? [...msg, `${k}: ${v}`] : msg), []);
+    .reduce<string[]>((msg, [k, v]) => (v ? [...msg, `${k}: ${v}`] : msg), [])
+    .join('\n');
 
-  const fullMessage = metadata.join('\n') + separator + message;
+  const fullMessage = metadata ? metadata + separator + message : message;
 
   const command = new PublishCommand({
     TopicArn: topicArn,
