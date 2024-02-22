@@ -177,3 +177,9 @@ Outputs:
           - HasApiBasePath
           - !Sub '/${ApiBasePath}'
           - ''
+  ApiId:
+    Description: 'API Gateway ID'
+    Value: !Ref ContactApi
+  ApiRootResourceId:
+    Description: 'Root resource ID for API Gateway'
+    Value: !GetAtt ContactApi.RootResourceId
