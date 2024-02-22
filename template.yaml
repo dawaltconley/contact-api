@@ -65,6 +65,7 @@ Conditions:
   CreateRecordSetGroup: !And
     - !Condition HasCustomApiDomain
     - !Equals [!Ref Route53Dns, 'true']
+  AllowsLogLevels: !Equals [!Ref LogFormat, 'JSON']
 
 Resources:
   CustomDomain:
@@ -143,10 +144,12 @@ Resources:
           REQUIRED_FIELDS: !Join [',', !Ref Required]
           HONEYPOT_FIELDS: !Join [',', !Ref Honeypot]
           ALLOW_ORIGIN: !Ref AllowOrigin
-      LoggingConfig:
-        ApplicationLogLevel: !Ref ApplicationLogLevel
-        SystemLogLevel: !Ref SystemLogLevel
-        LogFormat: !Ref LogFormat
+      LoggingConfig: !If
+        - AllowsLogLevels
+        - LogFormat: !Ref LogFormat
+          ApplicationLogLevel: !Ref ApplicationLogLevel
+          SystemLogLevel: !Ref SystemLogLevel
+        - LogFormat: !Ref LogFormat
 
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
