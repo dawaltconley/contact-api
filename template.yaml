@@ -42,6 +42,18 @@ Parameters:
     Type: String
     Description: Passed directly to Access-Control-Allow-Origin header in the CORS configuration.
     Default: ''
+  ApplicationLogLevel:
+    Type: String
+    AllowedValues: [TRACE, DEBUG, INFO, WARN, ERROR, FATAL]
+    Default: INFO
+  SystemLogLevel:
+    Type: String
+    AllowedValues: [DEBUG, INFO, WARN]
+    Default: WARN
+  LogFormat:
+    Type: String
+    AllowedValues: [Text, JSON]
+    Default: Text
 
 Conditions:
   HasApiSubdomain: !Not [!Equals [!Ref ApiSubdomain, '']]
@@ -131,6 +143,11 @@ Resources:
           REQUIRED_FIELDS: !Join [',', !Ref Required]
           HONEYPOT_FIELDS: !Join [',', !Ref Honeypot]
           ALLOW_ORIGIN: !Ref AllowOrigin
+      LoggingConfig:
+        ApplicationLogLevel: !Ref ApplicationLogLevel
+        SystemLogLevel: !Ref SystemLogLevel
+        LogFormat: !Ref LogFormat
+
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
