@@ -72,6 +72,35 @@ Passed directly to Access-Control-Allow-Origin header in the CORS configuration.
 - Type: String
 - Default: ""
 
+### ApplicationLogLevel
+
+- Type: String
+- AllowedValues:
+  - TRACE
+  - DEBUG
+  - INFO
+  - WARN
+  - ERROR
+  - FATAL
+- Default: INFO
+
+### SystemLogLevel
+
+- Type: String
+- AllowedValues:
+  - DEBUG
+  - INFO
+  - WARN
+- Default: WARN
+
+### LogFormat
+
+- Type: String
+- AllowedValues:
+  - Text
+  - JSON
+- Default: Text
+
 ## Resources
 
 ### CustomDomain
@@ -107,3 +136,17 @@ Passed directly to Access-Control-Allow-Origin header in the CORS configuration.
 ### ContactApi
 
 API Gateway endpoint URL
+
+### CustomDomainApi
+
+Custom domain API endpoint
+
+- Condition: HasCustomApiDomain
+
+### ApiId
+
+API Gateway ID
+
+### ApiRootResourceId
+
+Root resource ID for API Gateway
