@@ -27,19 +27,19 @@ List of honeypot form field names. These will cause the function to quietly abor
 - Type: CommaDelimitedList
 - Default: ""
 
-### ApiDomain
+### AllowOrigin
 
-Base domain where the api is hosted. Used to create an API Gateway custom domain name for this deployment.
+Passed directly to Access-Control-Allow-Origin header in the CORS configuration.
 
 - Type: String
 - Default: ""
 
-### ApiSubdomain
+### ApiDomain
 
-Subdomain where the api is hosted. Used to create an API Gateway custom domain name for this deployment.
+Custom domain where the api is hosted. Used to create an API Gateway custom domain name for this deployment.
 
 - Type: String
-- Default: api
+- Default: ""
 
 ### ApiBasePath
 
@@ -50,24 +50,21 @@ Base path of the custom domain where the API will be hosted.
 
 ### CertificateArn
 
-Certificate Manager ARN for the ApiDomain certificate. Required to use a custom domain.
+Certificate Manager ARN for the ApiDomain certificate. If supplied with ApiDomain, will attempt to create a new custom domain using the two.
 
 - Type: String
 - Default: ""
 
-### Route53Dns
+### HostedZoneId
 
-Whether this domain uses Route53 for its DNS
+If provided, creates a record set group connecting the custom domain to a Route53 zone.
 
 - Type: String
-- Default: true
-- AllowedValues:
-  - true
-  - false
+- Default: ""
 
-### AllowOrigin
+### HostedZoneName
 
-Passed directly to Access-Control-Allow-Origin header in the CORS configuration.
+Can provide this as an alternative to HostedZoneId
 
 - Type: String
 - Default: ""
@@ -105,18 +102,15 @@ Passed directly to Access-Control-Allow-Origin header in the CORS configuration.
 
 ### CustomDomain
 
-- Type: AWS::ApiGatewayV2::DomainName
-- Condition: HasCustomApiDomain
+- Type: AWS::CloudFormation::Stack
+- Condition: CreateCustomDomain
+- DependsOn: ContactApi
 
 ### CustomDomainMapping
 
 - Type: AWS::ApiGatewayV2::ApiMapping
-- Condition: HasCustomApiDomain
-
-### RecordSetGroup
-
-- Type: AWS::Route53::RecordSetGroup
-- Condition: CreateRecordSetGroup
+- Condition: HasCustomDomain
+- DependsOn: ContactApiProdStage
 
 ### ContactApi
 
@@ -141,7 +135,7 @@ API Gateway endpoint URL
 
 Custom domain API endpoint
 
-- Condition: HasCustomApiDomain
+- Condition: HasCustomDomain
 
 ### ApiId
 
