@@ -3,7 +3,14 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   SAM template for handling contact form submissions.
 
+Metadata:
+  cfn-lint:
+    config:
+      ignore_checks:
+        - W3002 # ignore warnings about dependency on the `package` command
+
 Parameters:
+  # application settings
   Email:
     Type: String
     Description: Email address to receive contact notifications.
@@ -17,31 +24,34 @@ Parameters:
     Type: CommaDelimitedList
     Description: List of honeypot form field names. These will cause the function to quietly abort.
     Default: ''
+  AllowOrigin:
+    Type: String
+    Description: Passed directly to Access-Control-Allow-Origin header in the CORS configuration.
+    Default: ''
+
+  # custom domain
   ApiDomain:
     Type: String
-    Description: Base domain where the api is hosted. Used to create an API Gateway custom domain name for this deployment.
+    Description: Custom domain where the api is hosted. Used to create an API Gateway custom domain name for this deployment.
     Default: ''
-  ApiSubdomain:
-    Type: String
-    Description: Subdomain where the api is hosted. Used to create an API Gateway custom domain name for this deployment.
-    Default: api
   ApiBasePath:
     Type: String
     Description: Base path of the custom domain where the API will be hosted.
     Default: ''
   CertificateArn:
     Type: String
-    Description: Certificate Manager ARN for the ApiDomain certificate. Required to use a custom domain.
+    Description: Certificate Manager ARN for the ApiDomain certificate. If supplied with ApiDomain, will attempt to create a new custom domain using the two.
     Default: ''
-  Route53Dns:
+  HostedZoneId:
     Type: String
-    Description: Whether this domain uses Route53 for its DNS
-    Default: 'true'
-    AllowedValues: ['true', 'false']
-  AllowOrigin:
-    Type: String
-    Description: Passed directly to Access-Control-Allow-Origin header in the CORS configuration.
+    Description: If provided, creates a record set group connecting the custom domain to a Route53 zone.
     Default: ''
+  HostedZoneName:
+    Type: String
+    Description: Can provide this as an alternative to HostedZoneId
+    Default: ''
+
+  # logs
   ApplicationLogLevel:
     Type: String
     AllowedValues: [TRACE, DEBUG, INFO, WARN, ERROR, FATAL]
@@ -56,51 +66,41 @@ Parameters:
     Default: Text
 
 Conditions:
-  HasApiSubdomain: !Not [!Equals [!Ref ApiSubdomain, '']]
+  HasCustomDomain: !Not [!Equals [!Ref ApiDomain, '']]
   HasApiBasePath: !Not [!Equals [!Ref ApiBasePath, '']]
-  HasCustomApiDomain: !And
-    - !Not [!Equals [!Ref ApiDomain, '']]
+  CreateCustomDomain: !And
+    - !Condition HasCustomDomain
     - !Not [!Equals [!Ref CertificateArn, '']]
   CorsEnabled: !Not [!Equals [!Ref AllowOrigin, '']]
-  CreateRecordSetGroup: !And
-    - !Condition HasCustomApiDomain
-    - !Equals [!Ref Route53Dns, 'true']
   AllowsLogLevels: !Equals [!Ref LogFormat, 'JSON']
 
 Resources:
   CustomDomain:
-    Type: AWS::ApiGatewayV2::DomainName
-    Condition: HasCustomApiDomain
+    Type: AWS::CloudFormation::Stack
+    Condition: CreateCustomDomain
+    DependsOn:
+      - ContactApi
     Properties:
-      DomainName: !If
-        - HasApiSubdomain
-        - !Sub '${ApiSubdomain}.${ApiDomain}'
-        - !Ref ApiDomain
-
-      DomainNameConfigurations:
-        - CertificateArn: !Ref CertificateArn
-          SecurityPolicy: TLS_1_2
+      TemplateURL: ./node_modules/@dawaltconley/cfn-static-website/api-domain.template.yaml
+      Parameters:
+        ApiDomain: !Ref ApiDomain
+        CertificateArn: !Ref CertificateArn
+        HostedZoneId: !Ref HostedZoneId
+        HostedZoneName: !Ref HostedZoneName
 
   CustomDomainMapping:
     Type: AWS::ApiGatewayV2::ApiMapping
-    Condition: HasCustomApiDomain
+    Condition: HasCustomDomain
+    DependsOn:
+      - ContactApiProdStage # SAM-created resource
     Properties:
-      DomainName: !Ref CustomDomain
+      DomainName: !If
+        - CreateCustomDomain
+        - !GetAtt CustomDomain.Outputs.CustomDomain
+        - !Ref ApiDomain
       ApiId: !Ref ContactApi
       Stage: Prod
       ApiMappingKey: !If [HasApiBasePath, !Ref ApiBasePath, !Ref AWS::NoValue]
-
-  RecordSetGroup:
-    Type: AWS::Route53::RecordSetGroup
-    Condition: CreateRecordSetGroup
-    Properties:
-      HostedZoneName: !Sub '${ApiDomain}.'
-      RecordSets:
-        - Name: !Ref CustomDomain
-          Type: A
-          AliasTarget:
-            HostedZoneId: !GetAtt CustomDomain.RegionalHostedZoneId
-            DNSName: !GetAtt CustomDomain.RegionalDomainName
 
   ContactApi:
     Type: AWS::Serverless::Api
@@ -108,9 +108,7 @@ Resources:
       StageName: Prod
       Cors: !If
         - CorsEnabled
-        - AllowMethods: "'GET,POST,OPTIONS'"
-          AllowHeaders: "'Content-Type'"
-          AllowOrigin: !Sub "'${AllowOrigin}'"
+        - !Ref AllowOrigin
         - !Ref AWS::NoValue
 
   ContactFunction:
@@ -150,7 +148,6 @@ Resources:
           ApplicationLogLevel: !Ref ApplicationLogLevel
           SystemLogLevel: !Ref SystemLogLevel
         - LogFormat: !Ref LogFormat
-
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -172,10 +169,10 @@ Outputs:
     Description: 'API Gateway endpoint URL'
     Value: !Sub 'https://${ContactApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/contact/'
   CustomDomainApi:
-    Condition: HasCustomApiDomain
+    Condition: HasCustomDomain
     Description: 'Custom domain API endpoint'
     Value: !Sub
-      - 'https://${CustomDomain}${BasePath}/contact/'
+      - 'https://${ApiDomain}${BasePath}/contact/'
       - BasePath: !If
           - HasApiBasePath
           - !Sub '/${ApiBasePath}'

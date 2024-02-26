@@ -6,7 +6,6 @@
   "files": [
     "dist/**/*"
   ],
-  "devDependencies": {},
   "scripts": {
     "test": "sam validate && npm run test --workspaces",
     "build": "sam build -b dist/build",
@@ -34,5 +33,8 @@
   "homepage": "https://github.com/dawaltconley/contact-api#readme",
   "workspaces": [
     "contact-form"
-  ]
+  ],
+  "dependencies": {
+    "@dawaltconley/cfn-static-website": "^3.1.0"
+  }
 }
