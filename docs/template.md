@@ -2,7 +2,6 @@
 
 SAM template for handling contact form submissions.
 
-
 ## Required Parameters
 
 ### Email
@@ -33,6 +32,16 @@ Passed directly to Access-Control-Allow-Origin header in the CORS configuration.
 
 - Type: String
 - Default: ""
+
+### CreateApi
+
+If true, creates a new serverless API resource for the contact lambda function. If false, creates resources that can be served from an API in another template.
+
+- Type: String
+- Default: true
+- AllowedValues:
+  - true
+  - false
 
 ### ApiDomain
 
@@ -115,6 +124,7 @@ Can provide this as an alternative to HostedZoneId
 ### ContactApi
 
 - Type: AWS::Serverless::Api
+- Condition: CreateApi
 
 ### ContactFunction
 
@@ -131,6 +141,8 @@ Can provide this as an alternative to HostedZoneId
 
 API Gateway endpoint URL
 
+- Condition: CreateApi
+
 ### CustomDomainApi
 
 Custom domain API endpoint
@@ -141,6 +153,18 @@ Custom domain API endpoint
 
 API Gateway ID
 
+- Condition: CreateApi
+
 ### ApiRootResourceId
 
 Root resource ID for API Gateway
+
+- Condition: CreateApi
+
+### FunctionArn
+
+ARN for the contact lambda function.
+
+### TopicArn
+
+ARN for the generated SNS topic.
