@@ -1,6 +1,8 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
-Description: >
+Transform:
+  - 'AWS::LanguageExtensions'
+  - 'AWS::Serverless-2016-10-31'
+Description: >-
   SAM template for handling contact form submissions.
 
 Metadata:
@@ -8,6 +10,7 @@ Metadata:
     config:
       ignore_checks:
         - W3002 # ignore warnings about dependency on the `package` command
+        - E0001 # false lint error for the !If statement in the ContactFunction Events. unfortunately disables other useful lint errors...
 
 Parameters:
   # application settings
@@ -28,6 +31,15 @@ Parameters:
     Type: String
     Description: Passed directly to Access-Control-Allow-Origin header in the CORS configuration.
     Default: ''
+  CreateApi:
+    Type: String
+    Description: >-
+      If true, creates a new serverless API resource for the contact lambda function.
+      If false, creates resources that can be served from an API in another template.
+    Default: 'true'
+    AllowedValues:
+      - 'true'
+      - 'false'
 
   # custom domain
   ApiDomain:
@@ -66,7 +78,10 @@ Parameters:
     Default: Text
 
 Conditions:
-  HasCustomDomain: !Not [!Equals [!Ref ApiDomain, '']]
+  CreateApi: !Equals [!Ref CreateApi, 'true']
+  HasCustomDomain: !And
+    - !Condition CreateApi
+    - !Not [!Equals [!Ref ApiDomain, '']]
   HasApiBasePath: !Not [!Equals [!Ref ApiBasePath, '']]
   CreateCustomDomain: !And
     - !Condition HasCustomDomain
@@ -104,6 +119,7 @@ Resources:
 
   ContactApi:
     Type: AWS::Serverless::Api
+    Condition: CreateApi
     Properties:
       StageName: Prod
       Cors: !If
@@ -121,18 +137,22 @@ Resources:
         - x86_64
       Timeout: 10
       Events:
-        GetRequests:
-          Type: Api
-          Properties:
-            Path: /contact
-            Method: get
-            RestApiId: !Ref ContactApi
-        PostRequests:
-          Type: Api
-          Properties:
-            Path: /contact
-            Method: post
-            RestApiId: !Ref ContactApi
+        GetRequests: !If
+          - CreateApi
+          - Type: Api
+            Properties:
+              Path: /contact
+              Method: get
+              RestApiId: !Ref ContactApi
+          - !Ref AWS::NoValue
+        PostRequests: !If
+          - CreateApi
+          - Type: Api
+            Properties:
+              Path: /contact
+              Method: post
+              RestApiId: !Ref ContactApi
+          - !Ref AWS::NoValue
       Policies:
         - SNSPublishMessagePolicy:
             TopicName: !GetAtt ContactTopic.TopicName
@@ -166,6 +186,7 @@ Resources:
 
 Outputs:
   ContactApi:
+    Condition: CreateApi
     Description: 'API Gateway endpoint URL'
     Value: !Sub 'https://${ContactApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/contact/'
   CustomDomainApi:
@@ -178,8 +199,16 @@ Outputs:
           - !Sub '/${ApiBasePath}'
           - ''
   ApiId:
+    Condition: CreateApi
     Description: 'API Gateway ID'
     Value: !Ref ContactApi
   ApiRootResourceId:
+    Condition: CreateApi
     Description: 'Root resource ID for API Gateway'
     Value: !GetAtt ContactApi.RootResourceId
+  FunctionArn:
+    Description: 'ARN for the contact lambda function.'
+    Value: !GetAtt ContactFunction.Arn
+  TopicArn:
+    Description: 'ARN for the generated SNS topic.'
+    Value: !GetAtt ContactTopic.TopicArn
