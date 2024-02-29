@@ -208,6 +208,9 @@ Outputs:
     Condition: CreateApi
     Description: 'Root resource ID for API Gateway'
     Value: !GetAtt ContactApi.RootResourceId
+  ApiStageName:
+    Condition: CreateApi
+    Value: Prod
   FunctionArn:
     Description: 'ARN for the contact lambda function.'
     Value: !GetAtt ContactFunction.Arn
