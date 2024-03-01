@@ -40,6 +40,10 @@ Parameters:
     AllowedValues:
       - 'true'
       - 'false'
+  SubscriptionName:
+    Type: String
+    Description: Human-readable name for the SNS subscription topic.
+    Default: ''
 
   # custom domain
   ApiDomain:
@@ -88,6 +92,7 @@ Conditions:
     - !Not [!Equals [!Ref CertificateArn, '']]
   CorsEnabled: !Not [!Equals [!Ref AllowOrigin, '']]
   AllowsLogLevels: !Equals [!Ref LogFormat, 'JSON']
+  HasSubscriptionName: !Not [!Equals [!Ref SubscriptionName, '']]
 
 Resources:
   CustomDomain:
@@ -185,6 +190,10 @@ Resources:
       Subscription:
         - Endpoint: !Ref Email
           Protocol: email
+      DisplayName: !If
+        - HasSubscriptionName
+        - !Ref SubscriptionName
+        - !Ref AWS::NoValue
 
 Outputs:
   ContactApi:
