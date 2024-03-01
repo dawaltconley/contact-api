@@ -19,6 +19,7 @@ export const lambdaHandler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   try {
+    console.log(event);
     const data = await getFormData(event).then(validateFormData);
     if (isSpam(data)) {
       console.error('Detected spam', data);
