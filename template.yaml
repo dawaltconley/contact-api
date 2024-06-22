@@ -6,6 +6,20 @@ Description: >-
   SAM template for handling contact form submissions.
 
 Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: ContactApi
+    Description: >-
+      Resources for handling simple contact form submissions.
+    SemanticVersion: 0.2.4
+    Author: Dylan Awalt-Conley
+    SpdxLicenceId: MIT
+    LicenseUrl: LICENSE.txt
+    ReadmeUrl: README.md
+    Labels:
+      - 'contact'
+      - 'form'
+    HomePageUrl: 'https://github.com/dawaltconley/contact-api'
+    SourceCodeUrl: 'https://github.com/dawaltconley/contact-api'
   cfn-lint:
     config:
       ignore_checks:
