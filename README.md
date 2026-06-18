@@ -55,6 +55,36 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND
 ```
 
+### As a source sub-template
+
+The npm distribution also includes the original `template.yaml` and the
+`contact-form` TypeScript source, in case you'd rather build the Lambda
+yourself (e.g. to customize the esbuild target, runtime, or bundling) instead
+of using the prebuilt artifacts.
+
+```
+npm install -D @dawaltconley/contact-api
+```
+
+```yaml
+# ...
+
+Resources:
+  ContactFormApi:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./node_modules/@dawaltconley/contact-api/template.yaml
+      Parameters:
+        Email: 'name@example.com'
+        Honeypot: 'foo,bar'
+        AllowOrigin: '*'
+
+#...
+```
+
+Run `sam build` from your own project; SAM's esbuild builder will install
+`contact-form`'s dependencies and bundle `app.ts` itself.
+
 ### As a standalone project
 
 If you have

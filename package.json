@@ -4,7 +4,14 @@
   "description": "A serverless application for handling contact form requests.",
   "main": "dist/build/ContactFunction/app.js",
   "files": [
-    "dist/**/*"
+    "dist/build/**/*",
+    "template.yaml",
+    "contact-form/app.ts",
+    "contact-form/notify.ts",
+    "contact-form/proxy.ts",
+    "contact-form/utils.ts",
+    "contact-form/package.json",
+    "contact-form/tsconfig.json"
   ],
   "scripts": {
     "test": "sam validate && npm run test --workspaces",
@@ -36,5 +43,8 @@
   ],
   "dependencies": {
     "@dawaltconley/cfn-static-website": "^3.1.0"
-  }
+  },
+  "bundledDependencies": [
+    "@dawaltconley/cfn-static-website"
+  ]
 }
