@@ -221,6 +221,9 @@ Outputs:
   FunctionArn:
     Description: 'ARN for the contact lambda function.'
     Value: !GetAtt ContactFunction.Arn
+  FunctionIamRole:
+    Description: 'Implicit IAM Role created for contact form function'
+    Value: !GetAtt ContactFunctionRole.Arn
   TopicArn:
     Description: 'ARN for the generated SNS topic.'
     Value: !GetAtt ContactTopic.TopicArn
